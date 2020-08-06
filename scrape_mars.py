@@ -49,8 +49,14 @@ def scrape():
     mars_facts_data["featured_image"] = full_img_url
     
     #Mars Weather
-
-
+    url_weather = "https://twitter.com/marswxreport?lang=en"
+    browser.visit(url_weather)
+    
+    tweets = soup.find_all(attrs={"data-testid": "tweet"})
+    spans = soup.find_all('span', class_='css-901oao css-16my406 r-1qd0xha r-ad9z0x r-bcqeeo r-qvutc0')
+    print(f"Title: {tweets}")
+    print(f"Para: {spans}")
+    
     #Mars Facts
     url_facts = "https://space-facts.com/mars/"
     time.sleep(2)

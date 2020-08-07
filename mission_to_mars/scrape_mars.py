@@ -10,6 +10,8 @@ import time
 import numpy as np
 import json
 from selenium import webdriver
+from urllib.parse import urlsplit
+
 
 def init_browser():
     executable_path = {"executable_path":"chromedriver.exe"}
@@ -17,36 +19,36 @@ def init_browser():
 
 def scrape():
     browser = init_browser()
-    mars_facts_data = {}
+    mars_data = {}
 
+    #NASA Mars News
     nasa = "https://mars.nasa.gov/news/"
     browser.visit(nasa)
-
     html = browser.html
     soup = BeautifulSoup(html,"html.parser")
+    news_title = soup.find('div', attrs={'class':'content_title'})
+    news_paragraph = soup.find('div', attrs={'class':'article_teaser_body'})
+    
+    mars_data['news_title'] = news_title
+    mars_data['news_paragraph'] = news_paragraph
 
-    #scrapping latest news about mars from nasa
-    news_title = soup.find("div",class_="content_title").text
-    news_paragraph = soup.find("div", class_="article_teaser_body").text
-    mars_facts_data['news_title'] = news_title
-    mars_facts_data['news_paragraph'] = news_paragraph 
     
     #Mars Featured Image
-    nasa_image = "https://www.jpl.nasa.gov/spaceimages/?search=&category=featured#submit"
-    browser.visit(nasa_image)
-    time.sleep(2)
-
-    from urllib.parse import urlsplit
-    base_url = "{0.scheme}://{0.netloc}/".format(urlsplit(nasa_image))
-    xpath = "//*[@id=\"page\"]/section[3]/div/ul/li[1]/a/div/div[2]/img"
-    results = browser.find_by_xpath(xpath)
-    img = results[0]
-    img.click()    
-    html_image = browser.html
-    soup = BeautifulSoup(html_image, "html.parser")
-    img_url = soup.find("img", class_="fancybox-image")["src"]
-    full_img_url = base_url + img_url
-    mars_facts_data["featured_image"] = full_img_url
+    url_image = "https://www.jpl.nasa.gov/spaceimages/?search=&category=featured#submit"
+    browser.visit(url_image)
+    url_html = browser.html
+    soup = BeautifulSoup(url_html, 'html.parser')
+    fancybox = soup.find('a', class_ = 'button fancybox')
+    img_link = fancybox['data-link']
+    browser.visit(f'https://www.jpl.nasa.gov{img_link}')
+    image_url = browser.html
+    soup_ = BeautifulSoup(image_url, 'html.parser')
+    full_image_url = soup_.find('img', class_ = "main_image")['src']
+    full_image_url = (f'https://www.jpl.nasa.gov{full_image_url}')
+    full_image_url
+    
+    mars_data['featured_image_link'] = full_image_url
+    
     
     #Mars Weather
     url_weather = "https://twitter.com/marswxreport?lang=en"
@@ -54,12 +56,12 @@ def scrape():
     
     tweets = soup.find_all(attrs={"data-testid": "tweet"})
     spans = soup.find_all('span', class_='css-901oao css-16my406 r-1qd0xha r-ad9z0x r-bcqeeo r-qvutc0')
-    print(f"Title: {tweets}")
-    print(f"Para: {spans}")
+    mars_weather = (tweets, spans)
+    mars_data['weather'] = mars_weather
+    
     
     #Mars Facts
     url_facts = "https://space-facts.com/mars/"
-    time.sleep(2)
     table = pd.read_html(url_facts)
     table[0]
 
@@ -68,21 +70,20 @@ def scrape():
     clean_table = df_mars_facts.set_index(["Parameter"])
     mars_html_table = clean_table.to_html()
     mars_html_table = mars_html_table.replace("\n", "")
-    mars_facts_data["mars_facts_table"] = mars_html_table
+    mars_data["mars_facts_table"] = mars_html_table
 
+    
+    
     #Mars Hemisperes
     url_hemisphere = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
     browser.visit(url_hemisphere)
     hemisphere_base_url = "{0.scheme}://{0.netloc}/".format(urlsplit(url_hemisphere))
-    print(hemisphere_base_url)
 
 
     #Cerberus-Hemisphere-image-url
     hemisphere_img_urls = []
     results = browser.find_by_xpath( "//*[@id='product-section']/div[2]/div[1]/a/img").click()
-    time.sleep(2)
     cerberus_open_click = browser.find_by_xpath( "//*[@id='wide-image-toggle']").click()
-    time.sleep(1)
     cerberus_image = browser.html
     soup = BeautifulSoup(cerberus_image, "html.parser")
     cerberus_url = soup.find("img", class_="wide-image")["src"]
@@ -95,9 +96,7 @@ def scrape():
 
     #Schiaparelli-Hemisphere-image-url
     results1 = browser.find_by_xpath( "//*[@id='product-section']/div[2]/div[2]/a/img").click()
-    time.sleep(2)
     schiaparelli_open_click = browser.find_by_xpath( "//*[@id='wide-image-toggle']").click()
-    time.sleep(1)
     schiaparelli_image = browser.html
     soup = BeautifulSoup(schiaparelli_image, "html.parser")
     schiaparelli_url = soup.find("img", class_="wide-image")["src"]
@@ -110,9 +109,7 @@ def scrape():
 
     #Syrtis Major Hemisphere
     results1 = browser.find_by_xpath( "//*[@id='product-section']/div[2]/div[3]/a/img").click()
-    time.sleep(2)
     syrtis_major_open_click = browser.find_by_xpath( "//*[@id='wide-image-toggle']").click()
-    time.sleep(1)
     syrtis_major_image = browser.html
     soup = BeautifulSoup(syrtis_major_image, "html.parser")
     syrtis_major_url = soup.find("img", class_="wide-image")["src"]
@@ -125,9 +122,7 @@ def scrape():
 
     #Valles Marineris Hemisphere
     results1 = browser.find_by_xpath( "//*[@id='product-section']/div[2]/div[4]/a/img").click()
-    time.sleep(2)
     valles_marineris_open_click = browser.find_by_xpath( "//*[@id='wide-image-toggle']").click()
-    time.sleep(1)
     valles_marineris_image = browser.html
     soup = BeautifulSoup(valles_marineris_image, "html.parser")
     valles_marineris_url = soup.find("img", class_="wide-image")["src"]
@@ -138,8 +133,8 @@ def scrape():
     hemisphere_image_urls.append(valles_marineris)
 
 
-    mars_facts_data["hemisphere_image_url"] = hemisphere_image_urls
+    mars_data["hemisphere_image_url"] = hemisphere_image_urls
 
     
-
-    return mars_facts_data
+    browser.quit()
+    return mars_data

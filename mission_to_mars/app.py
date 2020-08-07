@@ -1,9 +1,18 @@
 #################################################
 # Dependencies
 #################################################
-from flask import Flask, render_template, jsonify, redirect
+from bs4 import BeautifulSoup
+from splinter import Browser
+from pprint import pprint
 import pymongo
-import scrape_mars
+import pandas as pd
+import requests
+from flask import Flask, render_template
+import time
+import numpy as np
+import json
+from selenium import webdriver
+from urllib.parse import urlsplit
 
 #################################################
 # Flask Setup
@@ -22,25 +31,19 @@ db = client.mars_data
 mars = db.mars_collection
 mars.insert_one(scrape_mars.scrape())
 
-
-@app.route('/')
+@app.route("/")
 def index():
-    
-    mars = mongo.db.mars.find_one() 
-    return render_template('index.html', mars=mars)
+    mars = mongodb.mars_data.find_one()
+    return render_template("index.html", mars=mars)
 
 
-@app.route('/scrape')
+@app.route("/scrape")
 def scrape():
-    mars = mongo.db.mars
-    data = scrape_mars.scrape()
-    mars.update(
-        {},
-        data,
-        upsert=True
-    )
-
+    mars = mongo.db.mars_data
+    mars_data = scrape_mars.scrape_all()
+    mars.update({}, mars_data, upsert=True)
+    return "Successful!"
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()

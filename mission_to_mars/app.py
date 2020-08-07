@@ -1,16 +1,24 @@
+#################################################
+# Dependencies
+#################################################
 from flask import Flask, render_template, jsonify, redirect
 import pymongo
 import scrape_mars
 
-# Create an instance of Flask
+#################################################
+# Flask Setup
+#################################################
+
 app = Flask(__name__)
 
-# setup mongo connection
+#################################################
+# Flask Routes
+#################################################
+
 conn = "mongodb://localhost:27017"
 client = pymongo.MongoClient(conn)
 
-# connect to mongo db and collection
-db = client.mars_db
+db = client.mars_data
 mars = db.mars_collection
 mars.insert_one(scrape_mars.scrape())
 

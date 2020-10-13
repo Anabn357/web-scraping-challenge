@@ -16,3 +16,9 @@ In this assignment, you will build a web application that scrapes various websit
 
 5. Push the above changes to GitHub or GitLab.
 
+## Step 1 - Scraping
+
+Complete your initial scraping using Jupyter Notebook, BeautifulSoup, Pandas, and Requests/Splinter.
+
+* Create a Jupyter Notebook file called `mission_to_mars.ipynb` and use this to complete all of your scraping and analysis tasks. The following outlines what you need to scrape.
+
